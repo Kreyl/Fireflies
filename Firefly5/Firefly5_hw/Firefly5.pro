@@ -1,4 +1,4 @@
-update=25.08.2017 10:40:37
+update=25.08.2017 11:56:10
 version=1
 last_client=kicad
 [pcbnew]
@@ -30,6 +30,8 @@ version=1
 NetIExt=net
 [cvpcb/libraries]
 EquName1=devcms
+[general]
+version=1
 [eeschema]
 version=1
 LibDir=D:/libs/Kicad
@@ -41,5 +43,6 @@ LibName4=Power_kl
 LibName5=Tittar_kl
 LibName6=st_kl
 LibName7=Transistors_kl
-[general]
-version=1
+LibName8=Switches
+LibName9=RF ICs
+LibName10=Antennas_kl
