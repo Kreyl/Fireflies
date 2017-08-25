@@ -1,2 +1,4 @@
 *.prefs
 Firefly3/Firefly3_fw/Debug/
+*.kicad_pcb-bak
+*.dsn
