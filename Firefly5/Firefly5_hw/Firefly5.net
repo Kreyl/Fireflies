@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source D:\Nute\Calmari\Fireflies\Firefly5\Firefly5_hw\Firefly5.sch)
-    (date "26.08.2017 1:02:49")
+    (date "26.08.2017 11:00:25")
     (tool "Eeschema (2017-08-24 revision ee43728b1)-makepkg")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -427,7 +427,13 @@
       (footprint Radio:ANT_2400_MEANDER_MIRR)
       (libsource (lib Antennas_kl) (part ANT_GENERAL))
       (sheetpath (names /) (tstamps /))
-      (tstamp 59A0BB07)))
+      (tstamp 59A0BB07))
+    (comp (ref Logo1)
+      (value Logo)
+      (footprint Pictures:Ostranna_8x8)
+      (libsource (lib pcb_details) (part Logo))
+      (sheetpath (names /) (tstamps /))
+      (tstamp 59A12EF1)))
   (libparts
     (libpart (lib Antennas_kl) (part ANT_GENERAL)
       (description "General antenna symbol")
@@ -567,6 +573,10 @@
         (pin (num 4) (name B) (type passive))
         (pin (num 5) (name G) (type passive))
         (pin (num 6) (name ~) (type passive))))
+    (libpart (lib pcb_details) (part Logo)
+      (fields
+        (field (name Reference) Logo)
+        (field (name Value) Logo)))
     (libpart (lib Power_kl) (part NCP140x)
       (description "Step-up: Vin=0.2...5.5V, Vout=3.3V, Iout=100mA; SOT23-5")
       (footprints
