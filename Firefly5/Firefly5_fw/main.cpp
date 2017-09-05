@@ -37,7 +37,7 @@ int main(void) {
     Led.Init();
     Led.StartOrRestart(lsqStart);
 
-//    SimpleSensors::Init();
+    SimpleSensors::Init();
 
     // Main cycle
     ITask();
@@ -54,7 +54,7 @@ void ITask() {
                 break;
 
             case evtIdButtons:
-                Printf("Btn\r");
+                Printf("Btn %u\r", Msg.BtnEvtInfo.BtnID);
 
                 break;
 
