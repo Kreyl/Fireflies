@@ -26,7 +26,8 @@ extern void ProcessButtons(PinSnsState_t *PState, uint32_t Len);
 
 const PinSns_t PinSns[] = {
         // Buttons
-        {BTN_PIN, ProcessButtons},
+        {BTN1_PIN, ProcessButtons},
+        {BTN2_PIN, ProcessButtons},
 };
 #define PIN_SNS_CNT     countof(PinSns)
 

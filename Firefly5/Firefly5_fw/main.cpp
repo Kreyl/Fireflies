@@ -5,6 +5,8 @@
 #include "SimpleSensors.h"
 #include "buttons.h"
 #include "board.h"
+#include "led.h"
+#include "Sequences.h"
 
 #define FLASH_DURATION  45
 #define LED_DAC_VALUE   1600    // 1A
@@ -14,6 +16,9 @@ EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
 extern CmdUart_t Uart;
 void OnCmd(Shell_t *PShell);
 void ITask();
+
+// Variables and prototypes
+LedRGB_t Led { LED_R_PIN, LED_G_PIN, LED_B_PIN };
 
 int main(void) {
     // ==== Init Clock system ====
@@ -28,6 +33,9 @@ int main(void) {
     Uart.Init(115200);
     Printf("\r%S %S\r", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
+
+    Led.Init();
+    Led.StartOrRestart(lsqStart);
 
 //    SimpleSensors::Init();
 
