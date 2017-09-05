@@ -7,6 +7,7 @@
 #include "board.h"
 #include "led.h"
 #include "Sequences.h"
+#include "radio_lvl1.h"
 
 #define FLASH_DURATION  45
 #define LED_DAC_VALUE   1600    // 1A
@@ -22,6 +23,7 @@ LedRGB_t Led { LED_R_PIN, LED_G_PIN, LED_B_PIN };
 
 int main(void) {
     // ==== Init Clock system ====
+    Clk.SetupBusDividers(ahbDiv4, apbDiv1);
     Clk.UpdateFreqValues();
 
     // === Init OS ===
@@ -38,6 +40,7 @@ int main(void) {
     Led.StartOrRestart(lsqStart);
 
     SimpleSensors::Init();
+    Radio.Init();
 
     // Main cycle
     ITask();

@@ -39,6 +39,9 @@
 #define LED_G_PIN       { GPIOB, 1, TIM3, 4, invNotInverted, omPushPull, 255 }
 #define LED_B_PIN       { GPIOB, 4, TIM3, 1, invNotInverted, omPushPull, 255 }
 
+// Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
+#define CC_Setup0       SPI1, GPIOA, 5,6,7, 4, 3
+
 // UART
 #define UART_GPIO       GPIOA
 #define UART_TX_PIN     9
