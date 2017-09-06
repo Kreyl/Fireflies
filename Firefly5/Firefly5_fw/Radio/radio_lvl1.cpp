@@ -42,17 +42,19 @@ static void rLvl1Thread(void *arg) {
 __noreturn
 void rLevel1_t::ITask() {
     while(true) {
-//        uint8_t RxRslt = CC.Receive(999, &Pkt, &Rssi);
-//        if(RxRslt == retvOk and Pkt.TestWord == TEST_WORD) {
-//            Printf("Rx %u %X; Rssi=%d\r", Pkt.Percent, Pkt.TestWord, Rssi);
+        uint8_t RxRslt = CC.Receive(999, &Pkt, &Rssi);
+        if(RxRslt == retvOk) {
+            Printf("Rx Rssi=%d\r", Rssi);
             // Send message to main thd
 //            EvtMsg_t Msg(evtIdRadioCmd, Pkt.Btn);
 //            EvtQMain.SendNowOrExit(Msg);
             // Report reception
 //            CC.Recalibrate();
-            CC.Transmit(&Pkt);
-//        } // if RxRslt ok
-        chThdSleepMilliseconds(11);
+//            CC.Transmit(&Pkt);
+//            Printf("Tx\r");
+        } // if RxRslt ok
+//        else Printf("Rx\r");
+//        chThdSleepMilliseconds(11);
     } // while
 }
 #endif // task
