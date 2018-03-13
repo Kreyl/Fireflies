@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name Firefly5-rescue)(type Legacy)(uri ${KIPRJMOD}/Firefly5-rescue.lib)(options "")(descr ""))
+)

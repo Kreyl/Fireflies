@@ -19,15 +19,22 @@
 App_t App;
 
 const LedChunk_t lsqOn[] = {
-        { csSetColor, 1800, {0, 180, 180} },
-        { csEnd }
+        { csSetColor, 600, {255, 0, 255} },
+        { csWait,    1800 },
+        { csSetColor, 600, {45, 255, 255} },
+        { csWait,    1800 },
+        { csSetColor, 600, {255, 180, 0} },
+        { csWait,    1800 },
+        { csSetColor, 600, {0, 255, 11} },
+        { csWait,    1800 },
+        { csGoto, 0 }
 };
 const LedChunk_t lsqOff[] = {
         { csSetColor, 1800, clBlack },
         { csEnd }
 };
 
-#define AUTO_OFF    TRUE
+#define AUTO_OFF    FALSE
 
 #if AUTO_OFF
 Adc_t Adc;
@@ -110,23 +117,25 @@ int main(void) {
     }
 #else
 
-    Seq.Chunk[0] = {csSetColor, 720, {0,4,0}};
-    Seq.Chunk[1] = {csEnd};
+//    Seq.Chunk[0] = {csSetColor, 720, {0,4,0}};
+//    Seq.Chunk[1] = {csEnd};
 
-    int N, PrevN = 0;
-#define CHANGE_DELAY_MS 9999
+#define CHANGE_DELAY_MS 999
+
+    Led.StartSequence(lsqOn);
 
     while(true) {
-        do {
-            N = rand() % 7;
-        } while (N == PrevN);
-        PrevN = N;
 
-        Uart.Printf("%d\r", N);
-        Seq.Chunk[0].Color = ColorTable[N];
-        Led.StartSequence(&Seq.Chunk[0]);
+
+//        Uart.Printf("%d\r", N);
+//        Seq.Chunk[0].Color = ColorTable[N];
+//        Led.StartSequence(&Seq.Chunk[0]);
+
+
 
         chThdSleepMilliseconds(CHANGE_DELAY_MS);
+
+
 
 //        uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
 //        if(EvtMsk & EVTMSK_UART_NEW_CMD) {

@@ -27,8 +27,10 @@ struct LedChnl_t {
 #define LED_TOP_VALUE       255
 #define LED_INVERTED_PWM    FALSE
 const LedChnl_t
-    R = {GPIOA, 2, TIM2, 3},
-    G = {GPIOA, 3, TIM2, 4},
+//    R = {GPIOA, 2, TIM2, 3},
+//    G = {GPIOA, 3, TIM2, 4},
+    R = {GPIOA, 3, TIM2, 4},
+    G = {GPIOA, 2, TIM2, 3},
     B = {GPIOA, 1, TIM2, 2};
 
 // TimeToWaitBeforeNextAdjustment = SmoothVar / (N+4) + 1, where N - current LED brightness.

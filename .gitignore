@@ -4,3 +4,5 @@ Firefly3/Firefly3_fw/Debug/
 *.dsn
 *.ses
 Firefly5/Firefly5_fw/.settings/language.settings.xml
+Firefly5/Firefly5_hw/Firefly5.xml
+Firefly5/Firefly5_hw/Firefly5.csv
