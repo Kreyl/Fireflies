@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source D:\Nute\Calmari\Fireflies\Firefly5\Firefly5_hw\Firefly5.sch)
-    (date "14.03.2018 0:08:16")
+    (date "27.03.2018 23:48:24")
     (tool "Eeschema (5.0.0-rc2-dev-130-g0bdae22af)")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -67,8 +67,10 @@
       (sheetpath (names /) (tstamps /))
       (tstamp 599FE78C))
     (comp (ref DD1)
-      (value STM32F030C8Tx)
+      (value STM32F030C8T6)
       (footprint LQFP_TQFP:LQFP48)
+      (fields
+        (field (name PN) STM32F030C8T6))
       (libsource (lib st_kl) (part STM32F030C8Tx))
       (sheetpath (names /) (tstamps /))
       (tstamp 599FE796))
