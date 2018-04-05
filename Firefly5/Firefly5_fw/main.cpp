@@ -99,7 +99,7 @@ void ReadID() {
 
 uint8_t ISetID(int16_t NewID) {
     int32_t ID2Save = NewID;
-    uint8_t rslt = Flash::Save((uint32_t*)ID2Save, sizeof(ID2Save));
+    uint8_t rslt = Flash::Save((uint32_t*)&ID2Save, sizeof(ID2Save));
     if(rslt == retvOk) {
         ID = NewID;
         Printf("New ID: %d\r", ID);
