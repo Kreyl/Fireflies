@@ -74,4 +74,12 @@ SECTIONS
     {
         *(.eh_frame)
     } > VARIOUS_FLASH AT > VARIOUS_FLASH_LMA
+    
+    /***************************************
+     *  Here is place to read and write to *
+     ***************************************/
+    MyFlash1 0x0800F400 :
+    {
+        *(MyFlash)
+    } > flash0
 }

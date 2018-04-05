@@ -8,9 +8,7 @@
 #include "led.h"
 #include "Sequences.h"
 #include "radio_lvl1.h"
-
-#define FLASH_DURATION  45
-#define LED_DAC_VALUE   1600    // 1A
+#include "SaveToFlash.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -20,6 +18,10 @@ void ITask();
 
 // Variables and prototypes
 LedRGB_t Led { LED_R_PIN, LED_G_PIN, LED_B_PIN };
+
+int16_t ID;
+static uint8_t ISetID(int16_t NewID);
+void ReadID();
 
 int main(void) {
     // ==== Init Clock system ====
@@ -35,6 +37,8 @@ int main(void) {
     Uart.Init(115200);
     Printf("\r%S %S\r", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
+
+    ReadID();
 
     Led.Init();
     Led.StartOrRestart(lsqStart);
@@ -75,6 +79,36 @@ void OnCmd(Shell_t *PShell) {
     if(PCmd->NameIs("Ping")) PShell->Ack(retvOk);
     else if(PCmd->NameIs("Version")) PShell->Printf("%S %S\r", APP_NAME, BUILD_TIME);
 
+    else if(PCmd->NameIs("SetID")) {
+        int16_t NewID = 0;
+        if(PCmd->GetNext<int16_t>(&NewID) != retvOk) { PShell->Ack(retvCmdError); return; }
+        uint8_t r = ISetID(NewID);
+        PShell->Ack(r);
+    }
+
     else PShell->Ack(retvCmdUnknown);
 }
 #endif
+
+#if 1 // ============================= Settings ================================
+void ReadID() {
+    int32_t *SavedID = (int32_t*)Flash::GetFlashPointer();
+    ID = *SavedID;
+    Printf("ID: %d\r", ID);
+}
+
+uint8_t ISetID(int16_t NewID) {
+    int32_t ID2Save = NewID;
+    uint8_t rslt = Flash::Save((uint32_t*)ID2Save, sizeof(ID2Save));
+    if(rslt == retvOk) {
+        ID = NewID;
+        Printf("New ID: %d\r", ID);
+        return retvOk;
+    }
+    else {
+        Printf("EE error: %u\r", rslt);
+        return retvFail;
+    }
+}
+#endif
+

@@ -14,8 +14,8 @@
 
 #if 1 // =========================== Pkt_t =====================================
 struct rPkt_t  {
-    uint8_t Btn;
-    uint32_t TestWord;
+    int16_t DtctrID;
+    int16_t FrflyID;
 } __packed;
 
 #define RPKT_LEN    sizeof(rPkt_t)
@@ -29,6 +29,9 @@ struct rPkt_t  {
 #define RCHNL_SRV       0
 #define ID2RCHNL(ID)    (RCHNL_MIN + ID)
 #define RCHNL           7
+
+#define ID_FRFLY_MIN    10
+#define ID_FRFLY_MAX    40
 #endif
 
 #if 1 // =========================== Timings ===================================
