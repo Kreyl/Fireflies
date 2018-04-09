@@ -35,10 +35,8 @@ struct rPkt_t  {
 #endif
 
 #if 1 // =========================== Timings ===================================
-#define RX_T_MS                 180      // pkt duration at 10k is around 12 ms
-#define RX_SLEEP_T_MS           810
+#define SLEEP_T_MS              720
 #define MIN_SLEEP_DURATION_MS   18
-#define RETRY_CNT               4
 
 #endif
 

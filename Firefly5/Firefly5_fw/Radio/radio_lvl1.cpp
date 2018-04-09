@@ -12,6 +12,7 @@
 #include "board.h"
 
 cc2500_t CC(CC_Setup0);
+extern int16_t ID;
 
 //#define DBG_PINS
 
@@ -41,20 +42,29 @@ static void rLvl1Thread(void *arg) {
 
 __noreturn
 void rLevel1_t::ITask() {
+    bool RxSuccess;
     while(true) {
-        uint8_t RxRslt = CC.Receive(999, &Pkt, &Rssi);
-        if(RxRslt == retvOk) {
-            Printf("Rx Rssi=%d\r", Rssi);
-            // Send message to main thd
-//            EvtMsg_t Msg(evtIdRadioCmd, Pkt.Btn);
-//            EvtQMain.SendNowOrExit(Msg);
-            // Report reception
-//            CC.Recalibrate();
-//            CC.Transmit(&Pkt);
-//            Printf("Tx\r");
-        } // if RxRslt ok
-//        else Printf("Rx\r");
-//        chThdSleepMilliseconds(11);
+        RxSuccess = false;
+        for(int i=0; i<5; i++) {
+            uint8_t RxRslt = CC.Receive(9, &Pkt, &Rssi);
+            if(RxRslt == retvOk) {
+                RxSuccess = true;
+//                Printf("Det: %d; ID=%u; Rssi=%d\r", Pkt.DtctrID, Pkt.FrflyID, Rssi);
+                // Check if pkt is for us
+                if(Pkt.DtctrID != 0 and Pkt.FrflyID == ID) {
+//                    Printf("Rssi=%d\r", Rssi);
+                    // Report reception
+                    Pkt.DtctrID = 0;
+                    Pkt.FrflyID = ID;
+                    CC.Transmit(&Pkt);
+                }
+            } // if RxRslt ok
+        } // for
+        if(RxSuccess == false) { // RX faled
+            CC.EnterPwrDown();
+            Printf("Sleep\r");
+            chThdSleepMilliseconds(SLEEP_T_MS);
+        }
     } // while
 }
 #endif // task
