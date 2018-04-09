@@ -114,8 +114,8 @@ public:
 };
 
 // ==== Math ====
-#define MIN(a, b)   ( ((a)<(b))? (a) : (b) )
-#define MAX(a, b)   ( ((a)>(b))? (a) : (b) )
+#define MIN_(a, b)   ( ((a)<(b))? (a) : (b) )
+#define MAX_(a, b)   ( ((a)>(b))? (a) : (b) )
 #define ABS(a)      ( ((a) < 0)? -(a) : (a) )
 #define TRIM_VALUE(v, Max)  { if((v) > (Max)) (v) = (Max); }
 #define IS_LIKE(v, precise, deviation)  (((precise - deviation) < v) and (v < (precise + deviation)))
@@ -239,13 +239,24 @@ static inline uint32_t GetUniqID2() {
 static inline uint32_t GetUniqID3() {
     return *((uint32_t*)(UNIQ_ID_BASE + 0x14));
 }
+#elif defined STM32L4XX
+#define UNIQ_ID_BASE    0x1FFF7590
+static inline uint32_t GetUniqID1() {
+    return *((uint32_t*)(UNIQ_ID_BASE + 0x00));
+}
+static inline uint32_t GetUniqID2() {
+    return *((uint32_t*)(UNIQ_ID_BASE + 0x04));
+}
+static inline uint32_t GetUniqID3() {
+    return *((uint32_t*)(UNIQ_ID_BASE + 0x08));
+}
 #endif
 #endif
 
 #if 1 // ======================= Virtual Timer =================================
 /*
  * Example:
- * TmrKL_t TmrCheckBtn {MS2ST(54), EVT_BUTTONS, tktPeriodic};
+ * TmrKL_t TmrCheckBtn {MS2ST(54), evtIdBattery, tktPeriodic};
  * TmrCheckBtn.InitAndStart(chThdGetSelfX());
  */
 
@@ -292,33 +303,31 @@ public:
 #endif
 
 #if 1 // ========================== Random =====================================
-static inline int Random(int LowInclusive, int HighInclusive) {
-    return (rand() % (HighInclusive + 1 - LowInclusive)) + LowInclusive;
+namespace Random {
+//uint32_t last = 1;
+// Generate pseudo-random value
+static inline long int Generate(long int LowInclusive, long int HighInclusive) {
+    uint32_t last = random();
+    return (last % (HighInclusive + 1 - LowInclusive)) + LowInclusive;
 }
-static inline void RandomSeed(unsigned int Seed) { srand(Seed); }
+// Seed pseudo-random generator with new seed
+static inline void Seed(unsigned int Seed) { srandom(Seed); }
+
+// True random
+#if defined STM32L4XX
+void TrueInit();
+void TrueDeinit();
+
+// Generate truly random value
+uint32_t TrueGenerate(uint32_t LowInclusive, uint32_t HighInclusive);
+// Seed pseudo random with true random
+void SeedWithTrue();
+#endif
+} // namespace
 #endif
 
-#if 1 // =========================== Time ======================================
-static inline bool TimeElapsed(systime_t *PSince, uint32_t Delay_ms) {
-    chSysLock();
-    bool Rslt = (chVTGetSystemTimeX() - *PSince) > MS2ST(Delay_ms);
-    if(Rslt) *PSince = chVTGetSystemTimeX();
-    chSysUnlock();
-    return Rslt;
-}
-
-static inline void Loop(uint32_t N) {
-    for(volatile uint32_t i=0; i<N; i++);
-}
-#endif
-
-#if 1 // ========================== Simple delay ===============================
+// ========================== Simple delay ===============================
 static inline void DelayLoop(volatile uint32_t ACounter) { while(ACounter--); }
-//static inline void Delay_ms(uint32_t Ams) {
-//    volatile uint32_t __ticks = (Clk.AHBFreqHz / 4000) * Ams;
-//    DelayLoop(__ticks);
-//}
-#endif
 
 #if 1 // ======================= Power and backup unit =========================
 // See Programming manual: http://www.st.com/content/ccc/resource/technical/document/programming_manual/6c/3a/cb/e7/e4/ea/44/9b/DM00046982.pdf/files/DM00046982.pdf/jcr:content/translations/en.DM00046982.pdf
@@ -986,87 +995,84 @@ public:
 };
 #endif // EXTI
 
-#if 0 // ============================== IWDG ===================================
-enum IwdgPre_t {
-    iwdgPre4 = 0x00,
-    iwdgPre8 = 0x01,
-    iwdgPre16 = 0x02,
-    iwdgPre32 = 0x03,
-    iwdgPre64 = 0x04,
-    iwdgPre128 = 0x05,
-    iwdgPre256 = 0x06
-};
+#if 1 // ============================== IWDG ===================================
+namespace Iwdg {
 
-class IWDG_t {
-private:
-    void EnableAccess() { IWDG->KR = 0x5555; }
-    void SetPrescaler(IwdgPre_t Prescaler) { IWDG->PR = (uint32_t)Prescaler; }
-    void SetReload(uint16_t Reload) { IWDG->RLR = Reload; }
-public:
-    void Reload() { IWDG->KR = 0xAAAA; }
-    void Enable() { IWDG->KR = 0xCCCC; }
-    void SetTimeout(uint32_t ms) {
-        EnableAccess();
-        SetPrescaler(iwdgPre256);
-        uint32_t Count = (ms * (LSI_FREQ_HZ/1000)) / 256;
-        TRIM_VALUE(Count, 0xFFF);
-        SetReload(Count);
-        Reload();
+// Up to 32000 ms
+void InitAndStart(uint32_t ms);
+
+static inline void Reload() { IWDG->KR = 0xAAAA; }
+
+static inline bool ResetOccured() {
+    if(RCC->CSR & RCC_CSR_IWDGRSTF) {
+        RCC->CSR |= RCC_CSR_RMVF;   // Clear flags
+        return true;
     }
-    bool ResetOccured() {
-        if(RCC->CSR & RCC_CSR_IWDGRSTF) {
-            RCC->CSR |= RCC_CSR_RMVF;   // Clear flags
-            return true;
-        }
-        else return false;
-    }
-    void GoSleep(uint32_t Timeout_ms) {
-        chSysLock();
-        // Start LSI
-        Clk.EnableLSI();
-        // Start IWDG
-        SetTimeout(Timeout_ms);
-        Enable();
-        // Enter standby mode
-        SCB->SCR |= SCB_SCR_SLEEPDEEP;
-        PWR->CR = PWR_CR_PDDS;
-        PWR->CR |= PWR_CR_CWUF;
-        __WFI();
-        chSysUnlock();
-    }
+    else return false;
+}
+
+void GoSleep(uint32_t Timeout_ms);
+
 };
 #endif
 
 #if 1 // ============================== Sleep ==================================
 namespace Sleep {
+#if defined STM32L4XX
+static inline void EnterStandby() {
+    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+    uint32_t tmp = PWR->CR1 & ~PWR_CR1_LPMS;
+    tmp |= PWR_CR1_LPMS_STANDBY;
+    PWR->CR1 = tmp;
+    __WFI();
+}
+
+// It is impossible to distinct power-on and wake from shutdown
+static inline void EnterShutdown() {
+    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+    uint32_t tmp = PWR->CR1 & ~PWR_CR1_LPMS;
+    tmp |= PWR_CR1_LPMS_SHUTDOWN;
+    PWR->CR1 = tmp;
+    __WFI();
+}
+
+static inline void EnableWakeup1Pin(RiseFall_t RiseFall)  {
+    if(RiseFall == rfFalling) PWR->CR4 |= PWR_CR4_WP1;    // Detection on low level (falling edge)
+    else PWR->CR4 &= ~PWR_CR4_WP1;  // Detection on high level (rising edge)
+    PWR->CR3 |=  PWR_CR3_EWUP1;
+}
+static inline void DisableWakeup1Pin() { PWR->CR3 &= ~PWR_CR3_EWUP1; }
+static inline void EnableWakeup2Pin(RiseFall_t RiseFall)  {
+    if(RiseFall == rfFalling) PWR->CR4 |= PWR_CR4_WP2;
+    else PWR->CR4 &= ~PWR_CR4_WP2;
+    PWR->CR3 |=  PWR_CR3_EWUP2;
+}
+static inline void DisableWakeup2Pin() { PWR->CR3 &= ~PWR_CR3_EWUP2; }
+static inline void EnableWakeup4Pin(RiseFall_t RiseFall)  {
+    if(RiseFall == rfFalling) PWR->CR4 |= PWR_CR4_WP4;
+    else PWR->CR4 &= ~PWR_CR4_WP4;
+    PWR->CR3 |=  PWR_CR3_EWUP4;
+}
+static inline void DisableWakeup4Pin() { PWR->CR3 &= ~PWR_CR3_EWUP4; }
+
+static inline bool WasInStandby()      { return (PWR->SR1 & PWR_SR1_SBF); }
+static inline bool WkupOccured()       { return (PWR->SR1 & 0x1F); }
+static inline void ClearStandbyFlag()  { PWR->SCR |= PWR_SCR_CSBF; }
+static inline void ClearWUFFlags()     { PWR->SCR |= 0x1F; }
+#else
 static inline void EnterStandby() {
 #if defined STM32F0XX || defined STM32L4XX || defined STM32F2XX
     SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #else
     SCB->SCR |= SCB_SCR_SLEEPDEEP;
 #endif
-
-#if defined STM32L4XX
-    uint32_t tmp = PWR->CR1 & ~PWR_CR1_LPMS;
-    tmp |= PWR_CR1_LPMS_SHUTDOWN;
-    PWR->CR1 = tmp;
-#else
     PWR->CR = PWR_CR_PDDS;
     // Command to clear WUF (wakeup flag) and wait two sys clock cycles to allow it be cleared
     PWR->CR |= PWR_CR_CWUF;
     __NOP(); __NOP();
-#endif
     __WFI();
 }
 
-#if defined STM32L4XX
-static inline void EnableWakeup1Pin()  { PWR->CR3 |=  PWR_CR3_EWUP1; }
-static inline void DisableWakeup1Pin() { PWR->CR3 &= ~PWR_CR3_EWUP1; }
-static inline void EnableWakeup2Pin()  { PWR->CR3 |=  PWR_CR3_EWUP2; }
-static inline void DisableWakeup2Pin() { PWR->CR3 &= ~PWR_CR3_EWUP2; }
-static inline bool WasInStandby()      { return (PWR->SR1 & PWR_SR1_SBF); }
-static inline void ClearStandbyFlag()  { PWR->SCR |= PWR_SCR_CSBF; }
-#else
 #if defined STM32F2XX
 static inline void EnableWakeupPin()  { PWR->CSR |=  PWR_CSR_EWUP; }
 static inline void DisableWakeupPin() { PWR->CSR &= ~PWR_CSR_EWUP; }
@@ -1170,14 +1176,28 @@ public:
 // =========================== Flash and Option bytes ==========================
 namespace Flash {
 
-uint8_t ErasePage(uint32_t PageAddress);
-uint8_t ProgramWord(uint32_t Address, uint32_t Data);
+void UnlockFlash();
+void LockFlash();
 
+uint8_t ErasePage(uint32_t PageAddress);
+#if defined STM32L4XX
+uint8_t ProgramDWord(uint32_t Address, uint64_t Data);
+#else
+uint8_t ProgramWord(uint32_t Address, uint32_t Data);
 uint8_t ProgramBuf(void *PData, uint32_t ByteSz, uint32_t Addr);
+#endif
 
 bool FirmwareIsLocked();
 void LockFirmware();
 void UnlockFirmware();
+
+bool IwdgIsFrozenInStandby();
+void IwdgFrozeInStandby();
+
+#if defined STM32L4XX
+bool DualbankIsEnabled();
+void DisableDualbank();
+#endif
 
 }; // Namespace
 
@@ -1365,11 +1385,11 @@ enum AHBDiv_t {
     ahbDiv512=0b1111
 };
 enum APBDiv_t {apbDiv1=0b000, apbDiv2=0b100, apbDiv4=0b101, apbDiv8=0b110, apbDiv16=0b111};
+enum i2cClk_t { i2cclkHSI = 0, i2cclkSYSCLK = 1 };
 
 class Clk_t {
 private:
     uint8_t EnableHSE();
-    uint8_t EnableHSI();
     uint8_t EnablePLL();
     // To Hsi48 and back again
     uint32_t ISavedAhbDividers;
@@ -1388,6 +1408,7 @@ public:
     void SwitchToHsi();
 #endif
     // Clk Enables
+    uint8_t EnableHSI();
     uint8_t EnableHSI48();
     void EnableCRS();
     void EnableCSS()    { RCC->CR  |=  RCC_CR_CSSON; }
@@ -1413,10 +1434,20 @@ public:
     void SetupBusDividers(uint32_t Dividers);
     uint8_t SetupPLLDividers(uint8_t HsePreDiv, PllMul_t PllMul);
     void SetupPLLSrc(PllSrc_t Src);
+    uint32_t GetSysClkHz();
     void UpdateFreqValues();
     void SetupFlashLatency(uint32_t FrequencyHz);
     void EnablePrefetch()  { FLASH->ACR |=  FLASH_ACR_PRFTBE; }
     void DisablePrefetch() { FLASH->ACR &= ~FLASH_ACR_PRFTBE; }
+
+    void SetI2CClkSrc(I2C_TypeDef *i2c, i2cClk_t ClkSrc) {
+        uint32_t tmp = RCC->CFGR3;
+        if(i2c == I2C1) {   // i2c1 only is configured
+            tmp &= ~RCC_CFGR3_I2C1SW;
+            tmp |= ((uint32_t)ClkSrc) << 12;
+            RCC->CFGR3 = tmp;
+        }
+    }
 
     void PrintFreqs();
 };
@@ -1509,6 +1540,7 @@ public:
 // Values of the Internal oscillator in Hz
 #define MSI_FREQ_HZ     4000000UL
 #define HSI_FREQ_HZ     16000000UL
+#define LSI_FREQ_HZ     32000UL
 // Top frequency in all domains is 80 MHz
 
 enum AHBDiv_t {

@@ -33,7 +33,7 @@
 #if defined STM32L4XX || defined STM32F0XX
 #define UART_TX_REG     TDR
 #define UART_RX_REG     RDR
-#elif defined STM32L1XX
+#elif defined STM32L1XX || defined STM32F2XX
 #define UART_TX_REG     DR
 #define UART_RX_REG     DR
 #else
@@ -82,7 +82,7 @@ void BaseUart_t::IRQDmaTxHandler() {
 
 void BaseUart_t::ISendViaDMA() {
     uint32_t PartSz = (TXBuf + UART_TXBUF_SZ) - PRead; // Cnt from PRead to end of buf
-    ITransSize = MIN(IFullSlotsCount, PartSz);
+    ITransSize = MIN_(IFullSlotsCount, PartSz);
     if(ITransSize != 0) {
         IDmaIsIdle = false;
         dmaStreamSetMemory0(Params->PDmaTx, PRead);
@@ -149,11 +149,21 @@ uint8_t BaseUart_t::GetByte(uint8_t *b) {
 void BaseUart_t::Init(uint32_t ABaudrate) {
     AlterFunc_t PinAF;
     // ==== Tx pin ====
-#if defined STM32L4XX || defined STM32L1XX
-    PinAF = AF7; // for all USARTs
+#if defined STM32L4XX || defined STM32L1XX || defined STM32F2XX
+    PinAF = AF7;
+#if defined UART4
+    if(Params->Uart == UART4) PinAF = AF8;
+#endif
+#if defined UART5
+    if(Params->Uart == UART5) PinAF = AF8;
+#endif
+#if defined USART6
+    if(Params->Uart == USART6) PinAF = AF8;
+#endif
+
 #elif defined STM32F0XX
-    if(Params->PGpioTx == GPIOA) PinAF = AF1;
-    else PinAF = AF0;   // No more uarts in non-xC devices
+    PinAF = AF1; // GPIOA
+    if(Params->PGpioTx == GPIOB) PinAF = AF0;
 #else
 #error "UART AF not defined"
 #endif
@@ -170,6 +180,9 @@ void BaseUart_t::Init(uint32_t ABaudrate) {
 #endif
 #if defined UART5
     else if(Params->Uart == UART5) { rccEnableUART5(FALSE); }
+#endif
+#if defined USART6
+    else if(Params->Uart == USART6) { rccEnableUSART6(FALSE); }
 #endif
     // Setup independent clock if possible and required
 #if defined STM32F072xB
@@ -205,7 +218,7 @@ void BaseUart_t::Init(uint32_t ABaudrate) {
     Params->Uart->CR1 = USART_CR1_TE | USART_CR1_RE;        // TX & RX enable
     Params->Uart->CR3 = USART_CR3_DMAT | USART_CR3_DMAR;    // Enable DMA at TX & RX
     // ==== Rx pin ====
-#if defined STM32L4XX || defined STM32L1XX
+#if defined STM32L4XX || defined STM32L1XX || defined STM32F2XX
     PinAF = AF7; // for all USARTs
 #elif defined STM32F0XX
     if(Params->PGpioRx == GPIOA) PinAF = AF1;

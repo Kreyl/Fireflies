@@ -10,8 +10,8 @@
 #include <inttypes.h>
 
 // ==== General ====
-#define BOARD_NAME          "Firefly5"
-#define APP_NAME            "Firefly5"
+#define BOARD_NAME          "AlienTransmitterHW1"
+#define APP_NAME            "AlienTransmitter"
 
 // MCU type as defined in the ST header.
 #define STM32F030x8
@@ -21,26 +21,29 @@
 
 #define SYS_TIM_CLK             (Clk.APBFreqHz)
 
-#define SIMPLESENSORS_ENABLED   TRUE
-#define BUTTONS_ENABLED         TRUE
+#define SIMPLESENSORS_ENABLED   FALSE
+#define BUTTONS_ENABLED         FALSE
 #define ADC_REQUIRED            FALSE
-#define I2C1_ENABLED            FALSE
+#define I2C1_ENABLED            TRUE
 #define I2C_USE_SEMAPHORE       FALSE
 
 #if 1 // ========================== GPIO =======================================
 // PortMinTim_t: GPIO, Pin, Tim, TimChnl, invInverted, omPushPull, TopValue
 
-// Button
-#define BTN1_PIN        GPIOA, 0, pudPullDown
-#define BTN2_PIN        GPIOC, 13, pudPullDown
-
 // LED
-#define LED_R_PIN       { GPIOB, 0, TIM3, 3, invNotInverted, omPushPull, 255 }
-#define LED_G_PIN       { GPIOB, 1, TIM3, 4, invNotInverted, omPushPull, 255 }
-#define LED_B_PIN       { GPIOB, 4, TIM3, 1, invNotInverted, omPushPull, 255 }
+#define LED_PIN         GPIOA, 1, omPushPull
 
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
 #define CC_Setup0       SPI1, GPIOA, 5,6,7, 4, 3
+
+// Acc
+#define ACC_IRQ_PIN     GPIOB, 5
+
+#define I2C1_GPIO       GPIOB
+#define I2C1_SCL        6
+#define I2C1_SDA        7
+#define I2C_AF          AF1
+#define I2C_BAUDRATE_HZ 400000
 
 // UART
 #define UART_GPIO       GPIOA
