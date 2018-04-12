@@ -46,8 +46,10 @@ private:
 //        if(SleepDuration >= MIN_SLEEP_DURATION_MS) CC.EnterPwrDown();
         chThdSleepMilliseconds(SleepDuration); // XXX
     }
+    bool WasEnabled = true;
 public:
     int8_t Rssi;
+    bool Enabled = true;
     uint8_t Init();
     rPkt_t Pkt;
     // Inner use

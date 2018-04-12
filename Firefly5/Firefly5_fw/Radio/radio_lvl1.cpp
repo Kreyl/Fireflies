@@ -44,26 +44,36 @@ __noreturn
 void rLevel1_t::ITask() {
     bool RxSuccess;
     while(true) {
-        RxSuccess = false;
-        for(int i=0; i<5; i++) {
-            uint8_t RxRslt = CC.Receive(9, &Pkt, &Rssi);
-            if(RxRslt == retvOk) {
-                RxSuccess = true;
-//                Printf("Det: %d; ID=%u; Rssi=%d\r", Pkt.DtctrID, Pkt.FrflyID, Rssi);
-                // Check if pkt is for us
-                if(Pkt.DtctrID != 0 and Pkt.FrflyID == ID) {
-//                    Printf("Rssi=%d\r", Rssi);
-                    // Report reception
-                    Pkt.DtctrID = 0;
-                    Pkt.FrflyID = ID;
-                    CC.Transmit(&Pkt);
-                }
-            } // if RxRslt ok
-        } // for
-        if(RxSuccess == false) { // RX faled
-            CC.EnterPwrDown();
-            Printf("Sleep\r");
-            chThdSleepMilliseconds(SLEEP_T_MS);
+        if(Enabled) {
+            WasEnabled = true;
+            RxSuccess = false;
+            for(int i=0; i<5; i++) {
+                uint8_t RxRslt = CC.Receive(9, &Pkt, &Rssi);
+                if(RxRslt == retvOk) {
+                    RxSuccess = true;
+    //                Printf("Det: %d; ID=%u; Rssi=%d\r", Pkt.DtctrID, Pkt.FrflyID, Rssi);
+                    // Check if pkt is for us
+                    if(Pkt.DtctrID != 0 and Pkt.FrflyID == ID) {
+    //                    Printf("Rssi=%d\r", Rssi);
+                        // Report reception
+                        Pkt.DtctrID = 0;
+                        Pkt.FrflyID = ID;
+                        CC.Transmit(&Pkt);
+                    }
+                } // if RxRslt ok
+            } // for
+            if(RxSuccess == false) { // RX faled
+                CC.EnterPwrDown();
+    //            Printf("Sleep\r");
+                chThdSleepMilliseconds(SLEEP_T_MS);
+            }
+        }
+        else { // Not enabled
+            if(WasEnabled) {
+                CC.EnterPwrDown();
+                WasEnabled = false;
+            }
+            chThdSleepMilliseconds(99);
         }
     } // while
 }

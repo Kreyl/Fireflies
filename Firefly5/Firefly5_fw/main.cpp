@@ -5,7 +5,7 @@
 #include "board.h"
 #include "led.h"
 #include "radio_lvl1.h"
-#include "kl_i2c.h"
+#include "acc_mma8452.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -15,8 +15,10 @@ void ITask();
 
 // Variables and prototypes
 LedOnOff_t Led { LED_PIN };
+Acc_t Acc(&i2c1);
+TmrKL_t AccTimeoutTmr{MS2ST(4005), evtIdTimeToOff, tktOneShot};
 
-int16_t ID = 30;
+int16_t ID = 39 ;
 
 int main(void) {
     // ==== Init Clock system ====
@@ -34,9 +36,12 @@ int main(void) {
     Clk.PrintFreqs();
 
     Led.Init();
+    Led.On();
 
     i2c1.Init();
-    i2c1.ScanBus();
+//    i2c1.ScanBus();
+    Acc.Init();
+    AccTimeoutTmr.StartOrRestart();
 
     Radio.Init();
 
@@ -54,6 +59,18 @@ void ITask() {
                 ((Shell_t*)Msg.Ptr)->SignalCmdProcessed();
                 break;
 
+            case evtIdAcc:
+                Printf("Acc\r");
+                AccTimeoutTmr.StartOrRestart();
+                Radio.Enabled = true;
+                Led.On();
+                break;
+
+            case evtIdTimeToOff:
+                Printf("Off\r");
+                Radio.Enabled = false;
+                Led.Off();
+                break;
             default: break;
         } // switch
     } // while true
